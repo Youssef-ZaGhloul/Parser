@@ -11,3 +11,13 @@
 #TERM ::= FACTOR | TERM 'mulop' FACTOR
 #FACTOR ::= 'id' | 'num' | '(' EXPRESSION ')'
 #SIGN ::= '+' | '-'
+
+#E ::= T X
+#X ::= '+' T X | '\L'
+#T ::= F Y
+#Y ::= '*' F Y | '\L'
+#F ::= 'id' | '(' E ')'
+
+
+#S ::= A 'b' S | 'e' | '\L'
+#A ::= 'a' | 'c' A 'd'

@@ -23,62 +23,59 @@ def parsing_table(rules, first, follow):
         prod_buff = []
         stringaya = ""
         flag = False
-        #7aga 3'abeya gedan matrkezsh m3aha awi ana hab2a ashr7-ha
+        # if we find | in the production do something else do other thing;;;
         if "|" in productions:
-            flag = True
             prod_buff = productions.split("|")
             prod_buff[0] = prod_buff[0][:-1]
             x = 1
             while x < len(prod_buff):
                 prod_buff[x] = prod_buff[x][1:]
                 x += 1
+            for production in prod_buff:
+                original_production = production
+                production = production.replace("'", "")
 
-        for element in productions.replace("'", "").split("|"):
-            index = 0
-            "handling spaces"
-            for x in element:
-                if x == ' ':
-                    if index == 0:
-                        element = element[1:]
-                        index = index - 1
-                    elif index == len(element) - 1:
-                        element = element[:-1]
-                    else:
-                        element = element[:index]
-                        break
-                index += 1
-            if element == nonterminal:
-                print "ERROR ! - LEFT FACTORING/RECURSION 7abibi !!"
-                break
+                if production != '\L':
+                    if production[0] in terminals:
+                        if production[0] in first[nonterminal]:
+                            stringaya = nonterminal + '->' + original_production
+                            parsing_table[nonterminal][production[0]] = stringaya
 
-            if element in non_terminals:
-                for temp in first[nonterminal]:
-                    stringaya = str(nonterminal) + '->' + str(productions)
-                    if parsing_table[nonterminal][temp] is None:
-                        parsing_table[nonterminal][temp] = stringaya
-                    else:
-                        print "ERROR ya baba !!"
+                        if production[0] in follow[nonterminal]:
+                            stringaya = 'SYNC'
+                            parsing_table[nonterminal][production[0]] = stringaya
 
-            elif element in terminals:
-                if element == "\L":
-                    # EPSILON HANDLING
-                    for term in follow[nonterminal]:
-                        parsing_table[nonterminal][term] = str(nonterminal) + '->' + "\L"
-                    continue
-                # bashof kan 3andi OR wla la2
-                if flag:
-                    for text in prod_buff:
-                        # EPSILON HANDLING
-                        if text == "\L" or element == "\L":
-                            continue
-                        if element in text:
-                            stringaya = str(nonterminal) + '->' + str(text)
-                else:
-                    stringaya =str(nonterminal) + ' -> ' + str(productions)
+                    if production in terminals:
+                        if production in first[nonterminal]:
+                            stringaya = nonterminal + '->' + original_production
+                            parsing_table[nonterminal][production] = stringaya
 
-                parsing_table[nonterminal][element] = stringaya
+                        if production in follow[nonterminal]:
+                            stringaya = 'SYNC'
+                            parsing_table[nonterminal][production] = stringaya
 
-    return parsing_table
+                if production in non_terminals:
+                    for f in first[production]:
+                        stringaya = nonterminal + '->' + original_production
+                        parsing_table[nonterminal][f] = stringaya
+
+                if production[0] in non_terminals:
+                    for f in first[production[0]]:
+                        stringaya = nonterminal + '->' + original_production
+                        parsing_table[nonterminal][f] = stringaya
+
+                if production == '\L':
+                    stringaya = nonterminal + '->' + '\L'
+                    parsing_table[nonterminal]["$"] = stringaya
+
+        else:
+            prod_buff = productions
+            if prod_buff[0] in non_terminals:
+                for f in first[prod_buff[0]]:
+                    stringaya = nonterminal + '->' + prod_buff
+                    parsing_table[nonterminal][f] = stringaya
+
+    print(parsing_table)
 
 
 def handling_spaces(partition):
@@ -310,6 +307,9 @@ print 'First = ' + str(first)
 follow = calculate_follow(Rules, terminals, non_terminals, first)
 print "follow = " + str(follow)
 parse_table = parsing_table(Rules, first, follow)
-#print parse_table
-tokens = ['$', ')','id','+','id','(']
-parser(parse_table, tokens)
+# for non, t in parse_table.items():
+#     for x in t.items():
+#         print(non,x)
+
+# tokens = ['$','id','+','id']
+# parser(parse_table, tokens)

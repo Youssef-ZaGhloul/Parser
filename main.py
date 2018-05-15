@@ -328,6 +328,5 @@ print 'First = ' + str(first)
 follow = calculate_follow(Rules, terminals, non_terminals, first)
 print "follow = " + str(follow)
 parse_table = parsing_table(Rules, first, follow)
-tokens = ['$','b','a','a'
-          ]
+tokens = ['$','b','a','a']
 parser(parse_table, tokens)

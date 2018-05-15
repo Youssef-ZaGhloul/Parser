@@ -242,19 +242,49 @@ def parser(parse_table, tokens):
     # PUSH Starting symbol into stack
     stack.append(non_terminals[0])
     stack_symbol = stack.pop()
+    stack.append(stack_symbol)
     while len(tokens) > 0:
         token = tokens.pop()
-        while parse_table[stack_symbol][token] is not None:
+        if token == "$":
+            stack_symbol = stack.pop()
+            stack.append(stack_symbol)
+            while stack:
+                if parse_table[stack_symbol][token] is not None:
+                    production = parse_table[stack_symbol][token]
+                    production = production.replace("'", "").split("->")
+                    production = production[1].split(" ")
+                    stack.pop()
+                    if production == "\L":
+                        stack_symbol = stack.pop()
+
+        while parse_table[stack_symbol][token] is not None and token != "$":
             production = parse_table[stack_symbol][token]
             production = production.replace("'", "").split("->")
             production = production[1].split(" ")
-            for symbol in production:
-                stack.append(symbol)
-                stack_symbol = symbol
-        if parse_table[stack_symbol][token] is None:
-            print stack_symbol,token
-            print stack
-            print 'hey'
+            stack.pop()
+            for symbol in reversed(production):
+                if symbol != "\L":
+                    stack.append(symbol)
+                    stack_symbol = symbol
+                else:
+                    stack_symbol = stack.pop()
+                    stack.append(stack_symbol)
+                    break
+
+            if stack_symbol in non_terminals:
+                continue
+
+            elif stack_symbol is "\L":
+                continue
+
+            elif stack_symbol in terminals and stack_symbol != "\L":
+                print 'Matched Token ' + token
+                stack.pop()
+                stack_symbol = stack.pop()
+                stack.append(stack_symbol)
+                break
+
+
     return
 
 
@@ -281,5 +311,5 @@ follow = calculate_follow(Rules, terminals, non_terminals, first)
 print "follow = " + str(follow)
 parse_table = parsing_table(Rules, first, follow)
 #print parse_table
-tokens = ['$', 'id', '+', 'id']
+tokens = ['$', ')','id','+','id','(']
 parser(parse_table, tokens)

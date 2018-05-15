@@ -74,7 +74,7 @@ def parsing_table(rules, first, follow):
                 parsing_table[nonterminal][ff] = stringaya
 
     print(parsing_table)
-
+    return parsing_table
 
 def handling_spaces(partition):
     index = 0
@@ -232,6 +232,7 @@ def calculate_follow(rules, terminals, nonterminals, first):
 
 def parser(parse_table, tokens):
     stack = []
+    f = open("Output.txt", "w")
     # PUSH $ into stack
     stack.append("$")
     # PUSH Starting symbol into stack
@@ -246,40 +247,62 @@ def parser(parse_table, tokens):
             while stack:
                 if parse_table[stack_symbol][token] is not None:
                     production = parse_table[stack_symbol][token]
+                    f.write(str(production)+'\n')
                     production = production.replace("'", "").split("->")
                     production = production[1].split(" ")
                     stack.pop()
                     if production == "\L":
                         stack_symbol = stack.pop()
-
-        while parse_table[stack_symbol][token] is not None and token != "$":
-            production = parse_table[stack_symbol][token]
-            production = production.replace("'", "").split("->")
-            production = production[1].split(" ")
-            stack.pop()
-            for symbol in reversed(production):
-                if symbol != "\L":
-                    stack.append(symbol)
-                    stack_symbol = symbol
-                else:
-                    stack_symbol = stack.pop()
-                    stack.append(stack_symbol)
-                    break
-
-            if stack_symbol in non_terminals:
-                continue
-
-            elif stack_symbol is "\L":
-                continue
-
-            elif stack_symbol in terminals and stack_symbol != "\L":
-                print 'Matched Token ' + token
+        if stack_symbol in terminals:
+            if stack_symbol != token:
+                op = 'Error: missing ' + stack_symbol + ' ,inserted'
+                f.write(op+'\n')
                 stack.pop()
                 stack_symbol = stack.pop()
                 stack.append(stack_symbol)
-                break
+                tokens.append(token)
+            else:
+                op = 'Matched Token ' + stack_symbol
+                stack.pop()
+                stack_symbol = stack.pop()
+                stack.append(stack_symbol)
+                f.write(str(op)+'\n')
+                continue
 
+        else:
+            while parse_table[stack_symbol][token] is not None and token != "$":
+                production = parse_table[stack_symbol][token]
+                f.write(str(production)+'\n')
+                production = production.replace("'", "").split("->")
+                production = production[1].split(" ")
+                stack.pop()
+                for symbol in reversed(production):
+                    if symbol != "\L":
+                        stack.append(symbol)
+                        stack_symbol = symbol
+                    else:
+                        stack_symbol = stack.pop()
+                        stack.append(stack_symbol)
+                        break
 
+                if stack_symbol in non_terminals:
+                    continue
+
+                elif stack_symbol is "\L":
+                    continue
+
+                elif stack_symbol in terminals and stack_symbol != "\L":
+                    f.write('Matched Token ' + token + '\n')
+                    stack.pop()
+                    stack_symbol = stack.pop()
+                    stack.append(stack_symbol)
+                    break
+        if stack_symbol in non_terminals and parse_table[stack_symbol][token] is None:
+            f.write('Error: illegal ' + stack_symbol + '- discard ' + token + '\n')
+            continue
+
+    if len(stack) == 0 and len(tokens) ==0:
+        f.write('Accepted')
     return
 
 
@@ -305,9 +328,5 @@ print 'First = ' + str(first)
 follow = calculate_follow(Rules, terminals, non_terminals, first)
 print "follow = " + str(follow)
 parse_table = parsing_table(Rules, first, follow)
-# for non, t in parse_table.items():
-#     for x in t.items():
-#         print(non,x)
-
-# tokens = ['$','id','+','id']
-# parser(parse_table, tokens)
+tokens = ['$','b','a','a']
+parser(parse_table, tokens)

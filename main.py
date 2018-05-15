@@ -41,17 +41,9 @@ def parsing_table(rules, first, follow):
                             stringaya = nonterminal + '->' + original_production
                             parsing_table[nonterminal][production[0]] = stringaya
 
-                        if production[0] in follow[nonterminal]:
-                            stringaya = 'SYNC'
-                            parsing_table[nonterminal][production[0]] = stringaya
-
                     if production in terminals:
                         if production in first[nonterminal]:
                             stringaya = nonterminal + '->' + original_production
-                            parsing_table[nonterminal][production] = stringaya
-
-                        if production in follow[nonterminal]:
-                            stringaya = 'SYNC'
                             parsing_table[nonterminal][production] = stringaya
 
                 if production in non_terminals:
@@ -74,6 +66,12 @@ def parsing_table(rules, first, follow):
                 for f in first[prod_buff[0]]:
                     stringaya = nonterminal + '->' + prod_buff
                     parsing_table[nonterminal][f] = stringaya
+
+        # Implementing PANIC ERROR ROUTINE
+        for ff in follow[nonterminal]:
+            if parsing_table[nonterminal][ff] is None:
+                stringaya = 'SYNC'
+                parsing_table[nonterminal][ff] = stringaya
 
     print(parsing_table)
 

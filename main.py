@@ -69,9 +69,10 @@ def parsing_table(rules, first, follow):
 
         # Implementing PANIC ERROR ROUTINE
         for ff in follow[nonterminal]:
-            if parsing_table[nonterminal][ff] is None:
-                stringaya = 'SYNC'
-                parsing_table[nonterminal][ff] = stringaya
+            if ff != "$":
+                if parsing_table[nonterminal][ff] is None:
+                    stringaya = 'SYNC'
+                    parsing_table[nonterminal][ff] = stringaya
 
     print(parsing_table)
     return parsing_table
@@ -232,6 +233,7 @@ def calculate_follow(rules, terminals, nonterminals, first):
 
 def parser(parse_table, tokens):
     stack = []
+    flag = True
     f = open("Output.txt", "w")
     # PUSH $ into stack
     stack.append("$")
@@ -240,6 +242,7 @@ def parser(parse_table, tokens):
     stack_symbol = stack.pop()
     stack.append(stack_symbol)
     while len(tokens) > 0:
+        flag = True
         token = tokens.pop()
         if token == "$":
             stack_symbol = stack.pop()
@@ -252,6 +255,7 @@ def parser(parse_table, tokens):
                     production = production[1].split(" ")
                     stack.pop()
                     if production == "\L":
+                        stack.pop()
                         stack_symbol = stack.pop()
 
         if stack_symbol in terminals:
@@ -273,6 +277,13 @@ def parser(parse_table, tokens):
         else:
             while parse_table[stack_symbol][token] is not None and token != "$":
                 production = parse_table[stack_symbol][token]
+                if production == 'SYNC':
+                    if token not in first[stack_symbol] and token in follow[stack_symbol]:
+                        stack_symbol = stack.pop()
+                        continue
+                    else:
+                        f.write('Error Skip ' + token + '\n')
+                        break
                 f.write(str(production)+'\n')
                 production = production.replace("'", "").split("->")
                 production = production[1].split(" ")
@@ -297,8 +308,10 @@ def parser(parse_table, tokens):
                     stack.pop()
                     stack_symbol = stack.pop()
                     stack.append(stack_symbol)
+                    flag = False
                     break
-        if stack_symbol in non_terminals and parse_table[stack_symbol][token] is None:
+
+        if stack_symbol in non_terminals and parse_table[stack_symbol][token] is None and flag is True:
             f.write('Error: illegal ' + stack_symbol + '- discard ' + token + '\n')
             continue
     if len(stack) == 0 and len(tokens) == 0:
@@ -329,5 +342,5 @@ print 'First = ' + str(first)
 follow = calculate_follow(Rules, terminals, non_terminals, first)
 print "follow = " + str(follow)
 parse_table = parsing_table(Rules, first, follow)
-tokens = ['$','b','a','a']
+tokens = ['$','b','d','a','e','c']
 parser(parse_table, tokens)

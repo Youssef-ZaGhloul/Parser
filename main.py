@@ -10,6 +10,93 @@ follow_set = {}
 parsing_table = {}
 
 
+def left_recursion(rules, terminals, nonterminals):
+    new_rules = OrderedDict()
+    nonterminal_count = 0
+    left_flag = 0
+    lst = []
+    for nonterminal, productions in rules.items():
+        left_recursed_list = []
+        correct_partition_list = []
+        loop_count = 0
+        partition_count_1 = 0
+        partition_count_2 = 0
+        for partition_of_production in productions.split("|"):
+            partition_of_production = handling_spaces(partition_of_production)
+            divided_elements = partition_of_production.split(" ")
+            if divided_elements[-1] == '':
+                divided_elements = divided_elements[:-1]
+            if divided_elements[0] == nonterminal:
+                # left recursion detected , set flag = 1
+                left_flag = 1
+                # create new non terminal
+                new_nonterminal = 'X' + str(nonterminal_count)
+                del divided_elements[0]
+                # List of alphas
+
+                if partition_count_1 == 0:
+                    loop_count = 1
+                    # adding spaces between non terminals
+                    while loop_count < len(divided_elements):
+                        divided_elements.insert(loop_count, ' ')
+                        loop_count += 2
+                    partition_count_1 += 1
+                else:
+                    #case of A ---> AB | AC
+                    # adding spaces between non terminals
+                    loop_count = 1
+                    while loop_count < len(divided_elements):
+                        divided_elements.insert(loop_count, ' ')
+                        loop_count += 2
+                    # adding '|'
+                    divided_elements = ' | ' + ''.join(divided_elements) + ' ' + new_nonterminal
+                    left_recursed_list.append(''.join(divided_elements))
+                    continue
+
+
+                divided_elements.append(str(' ' + new_nonterminal))
+                left_recursed_list.append(''.join(divided_elements))
+            else:
+                # List of Betas
+                    if partition_count_2 == 0:
+                        loop_count = 1
+                        #adding spaces between non terminals
+                        while loop_count < len(divided_elements):
+                            divided_elements.insert(loop_count, ' ')
+                            loop_count += 2
+                        correct_partition_list.append(''.join(divided_elements))
+                        partition_count_2 += 1
+                    else:
+                        # adding spaces between non terminals
+                        loop_count = 1
+                        while loop_count < len(divided_elements):
+                            divided_elements.insert(loop_count, ' ')
+                            loop_count += 2
+                        # adding '|'
+                        to_be_appended = ' | ' + ''.join(divided_elements)
+                        correct_partition_list.append(to_be_appended)
+        if left_flag == 1:
+            loop_count = 0
+            while loop_count < len(correct_partition_list):
+                correct_partition_list[loop_count] = correct_partition_list[loop_count] + ' ' + new_nonterminal
+                loop_count += 1
+            lst.append(rules[nonterminal])
+            new_rules[nonterminal] = ''.join(correct_partition_list)
+            # then add alphas
+            new_rules[new_nonterminal] = ''.join(left_recursed_list) + ' | \'\L\''
+
+            left_flag = 0
+            nonterminal_count += 1
+        else:
+            #if no left recursion put as is
+            new_rules[nonterminal] = productions
+
+    # for nonterminal, productions in new_rules.items():
+    #      print nonterminal + " --->" + productions
+
+    return new_rules
+
+
 def parsing_table(rules, first, follow):
     parsing_table = defaultdict(dict)
     for x in non_terminals:
@@ -74,8 +161,9 @@ def parsing_table(rules, first, follow):
                     stringaya = 'SYNC'
                     parsing_table[nonterminal][ff] = stringaya
 
-    print(parsing_table)
+    # print(parsing_table)
     return parsing_table
+
 
 def handling_spaces(partition):
     index = 0
@@ -336,11 +424,21 @@ with open("CFG.txt", "r") as x:
                     if element not in terminals:
                         terminals.append(element)
 
-
+# Rules = left_recursion(Rules,terminals,non_terminals)
+print('Terminals ', terminals)
+print('Non-Terminals ', non_terminals)
 first = calculate_first(Rules, terminals, non_terminals)
 print 'First = ' + str(first)
 follow = calculate_follow(Rules, terminals, non_terminals, first)
 print "follow = " + str(follow)
 parse_table = parsing_table(Rules, first, follow)
+
+for x, y in parse_table.items():
+    for z, k in parse_table.items():
+        print("    " + str(z))
+        print("        " + str(k))
+    break
+
+
 tokens = ['$','b','d','a','e','c']
 parser(parse_table, tokens)

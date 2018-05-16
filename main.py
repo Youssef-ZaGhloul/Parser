@@ -253,6 +253,8 @@ def parser(parse_table, tokens):
                     stack.pop()
                     if production == "\L":
                         stack_symbol = stack.pop()
+
+
         if stack_symbol in terminals:
             if stack_symbol != token:
                 op = 'Error: missing ' + stack_symbol + ' ,inserted'
@@ -300,9 +302,6 @@ def parser(parse_table, tokens):
         if stack_symbol in non_terminals and parse_table[stack_symbol][token] is None:
             f.write('Error: illegal ' + stack_symbol + '- discard ' + token + '\n')
             continue
-
-    if len(stack) == 0 and len(tokens) ==0:
-        f.write('Accepted')
     return
 
 
